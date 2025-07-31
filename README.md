@@ -2,6 +2,10 @@
 
 - Create Vite + React
 - Configured Tailwind
+- Build Header
+- Login Form
+
+# Features
 
 - Login/Sign Up 
    - SignIn/Up Form
