@@ -3,7 +3,11 @@
 - Create Vite + React
 - Configured Tailwind
 - Build Header
+- Routing Of Our App
 - Login Form
+- Sign UP Form
+- Form Validation
+- Used useRef Hook
 
 # Features
 

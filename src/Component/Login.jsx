@@ -1,9 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
+import {checkValidData} from "../Utils/Validate";
 
 const Login = () => {
   const [isSignInForm, setSignInForm] = useState(true);
+  const [errMsg, setErrmsg]= useState(null);
+
+const email=useRef(null);
+const password=useRef(null);
+// const name=useRef(null);
+
+
+
+
+const handaleButtonClick=()=>{ 
+  //Validates the form Data
+
+// console.log(email.current.value);
+// console.log(password.current.value);
+// console.log(name);
+
+const errmessage= checkValidData(email.current.value, password.current.value);
+//  console.log(errmessage);
+setErrmsg(errmessage);
+
+
+
+}
 
   const toggleSignInForm = () => {
     setSignInForm(!isSignInForm);
@@ -26,13 +50,14 @@ const Login = () => {
         <Header />
 
         {/* Center Form */}
-        <form className="p-12 bg-black opacity-80 text-white w-3/12 mx-auto mt-36 rounded-lg">
+        <form onSubmit={(e)=>e.preventDefault()}className="p-12 bg-black opacity-80 text-white w-3/12 mx-auto mt-36 rounded-lg">
           <h1 className="font-bold text-3xl py-2">
             {isSignInForm ? "Sign In" : "Sign Up"}
           </h1>
 
           {!isSignInForm && (
             <input
+            // ref={name}
               type="text"
               placeholder="Full Name"
               className="p-4 my-4 w-full bg-gray-600"
@@ -40,18 +65,22 @@ const Login = () => {
           )}
 
           <input
+          ref={email}
             type="text"
             placeholder="Email Address"
             className="p-4 my-4 w-full bg-gray-600"
           />
 
           <input
+           ref={password}
             type="password"
             placeholder="Password"
             className="p-4 my-4 w-full bg-gray-600"
           />
+          
+          <p className="text-red-500 font-bold text-lg py-2">{errMsg}</p>
 
-          <button className="p-4 my-6 bg-red-700 w-full rounded-lg cursor-pointer">
+          <button className="p-4 my-6 bg-red-700 w-full rounded-lg cursor-pointer" onClick={handaleButtonClick}>
             {isSignInForm ? "Sign In" : "Sign Up"}
           </button>
 
