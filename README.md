@@ -8,6 +8,8 @@
 - Sign UP Form
 - Form Validation
 - Used useRef Hook
+- Deployed app Using Google-Firebase
+- Create Sign Up User in User Acoount
 
 # Features
 
