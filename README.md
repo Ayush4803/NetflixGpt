@@ -10,6 +10,7 @@
 - Used useRef Hook
 - Deployed app Using Google-Firebase
 - Create Sign Up User in User Acoount
+- Created the Browser and Logout Option
 
 # Features
 
@@ -132,6 +133,9 @@ useDispatch → lets you send actions to update the store
 
 const cartItems = useSelector((state) => state.cart.items); // read cart
 const dispatch = useDispatch(); // send actions
+
+
+
 
 
 # Please ensure that you have a CORS plugin enabaled in your browser
