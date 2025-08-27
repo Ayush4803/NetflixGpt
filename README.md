@@ -11,6 +11,8 @@
 - Deployed app Using Google-Firebase
 - Create Sign Up User in User Acoount
 - Created the Browser and Logout Option
+- Created an Acoount in TMDB nad fetch the live Movie data
+- Created a Custom Hook For NOWPLAYINGMOVIES
 
 # Features
 

@@ -2,10 +2,19 @@ import React, { useEffect } from "react";
 import { signOut } from "firebase/auth";
 import { auth } from "../Utils/firebase";
 import { useNavigate } from "react-router-dom";
-import { netflixLOGO, userAvatar,API_OPTIONS} from "../Utils/constant";
+import { netflixLOGO, userAvatar, API_OPTIONS } from "../Utils/constant";
+import { useDispatch } from "react-redux";
+// import { addnowPlayingMovies } from "../Utils/movieSlice";
+import useNowPlayingMovies from "../hooks/useNowPlayingMovies"
+import MainContainer from "./MainContainer";
+import SecondryContainer from "./SecondryContainer";
+
 
 const Browse = () => {
+
+  useNowPlayingMovies()
   const navigate = useNavigate();
+
 
   const handleSignOut = () => {
     signOut(auth)
@@ -13,19 +22,7 @@ const Browse = () => {
       .catch(() => navigate("/"));
   };
 
-  useEffect(() => {
-    const getNOWMOVIES = async () => {
-      const data = await fetch(
-        "https://api.themoviedb.org/3/trending/movie/day?language=en-US",
-        API_OPTIONS
-      );
-      const json = await data.json();
-      console.log(json);
-    };
-
-    getNOWMOVIES();
-  }, []);
-
+ 
   return (
     <div className="bg-black min-h-screen text-white">
       <header className="flex items-center justify-between px-8 py-4 bg-black">
@@ -40,6 +37,11 @@ const Browse = () => {
           <img className="w-10 h-10 rounded cursor-pointer" src={userAvatar} alt="User Avatar" />
         </div>
       </header>
+
+
+    <MainContainer/>
+    <SecondryContainer/>
+    
     </div>
   );
 };

@@ -5,6 +5,9 @@ import { checkValidData } from "../Utils/Validate";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
 } from "firebase/auth";
 import { auth } from "../Utils/firebase";
 import { bgLogo } from "../Utils/constant";
@@ -12,7 +15,8 @@ import { bgLogo } from "../Utils/constant";
 const Login = () => {
   const [isSignInForm, setSignInForm] = useState(true);
   const [errMsg, setErrmsg] = useState(null);
-  const [showPassword, setShowPassword] = useState(false); // 👈 new state
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false); // 👈 new state
 
   const email = useRef(null);
   const password = useRef(null);
@@ -23,25 +27,32 @@ const Login = () => {
     setErrmsg(errmessage);
     if (errmessage) return;
 
-    if (!isSignInForm) {
-      createUserWithEmailAndPassword(auth, email.current.value, password.current.value)
-        .then((userCredential) => {
-          console.log("✅ User Signed Up:", userCredential.user);
-        })
-        .catch((error) => {
-          console.error("❌ Firebase SignUp Error:", error);
-          setErrmsg(error.message);
-        });
-    } else {
-      signInWithEmailAndPassword(auth, email.current.value, password.current.value)
-        .then((userCredential) => {
-          console.log("✅ User Signed In:", userCredential.user);
-        })
-        .catch((error) => {
-          console.error("❌ Firebase SignIn Error:", error);
-          setErrmsg(error.message);
-        });
-    }
+    // 👇 set persistence before login
+    setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence)
+      .then(() => {
+        if (!isSignInForm) {
+          // ---- SIGN UP ----
+          return createUserWithEmailAndPassword(
+            auth,
+            email.current.value,
+            password.current.value
+          );
+        } else {
+          // ---- SIGN IN ----
+          return signInWithEmailAndPassword(
+            auth,
+            email.current.value,
+            password.current.value
+          );
+        }
+      })
+      .then((userCredential) => {
+        console.log("✅ User Authenticated:", userCredential.user);
+      })
+      .catch((error) => {
+        console.error("❌ Firebase Auth Error:", error);
+        setErrmsg(error.message);
+      });
   };
 
   const toggleSignInForm = () => {
@@ -89,7 +100,7 @@ const Login = () => {
           <div className="relative">
             <input
               ref={password}
-              type={showPassword ? "text" : "password"} // 👈 toggle here
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
               className="p-4 my-4 w-full bg-gray-600 pr-12"
             />
@@ -102,6 +113,20 @@ const Login = () => {
             </button>
           </div>
 
+          {/* ✅ Keep me logged in */}
+          <div className="flex items-center gap-2 my-2">
+            <input
+              type="checkbox"
+              id="rememberMe"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+            />
+            <label htmlFor="rememberMe" className="text-sm">
+              Keep me logged in
+            </label>
+          </div>
+
+          {/* Error Message */}
           <p className="text-red-500 font-bold text-lg py-2">{errMsg}</p>
 
           <button
