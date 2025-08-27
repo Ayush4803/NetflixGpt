@@ -4,25 +4,26 @@ import Footer from "./Footer";
 import { checkValidData } from "../Utils/Validate";
 import {
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, // ✅ only using Email/Password now
+  signInWithEmailAndPassword,
 } from "firebase/auth";
 import { auth } from "../Utils/firebase";
+import { bgLogo } from "../Utils/constant";
 
 const Login = () => {
-  const [isSignInForm, setSignInForm] = useState(true); // toggle between SignIn & SignUp
+  const [isSignInForm, setSignInForm] = useState(true);
   const [errMsg, setErrmsg] = useState(null);
+  const [showPassword, setShowPassword] = useState(false); // 👈 new state
 
   const email = useRef(null);
   const password = useRef(null);
 
-  // 🔹 Handle SignIn or SignUp with Email/Password
+  // Handle SignIn or SignUp
   const handleEmailPasswordLogin = () => {
     const errmessage = checkValidData(email.current.value, password.current.value);
     setErrmsg(errmessage);
     if (errmessage) return;
 
     if (!isSignInForm) {
-      // ----------------- SIGN UP FLOW -----------------
       createUserWithEmailAndPassword(auth, email.current.value, password.current.value)
         .then((userCredential) => {
           console.log("✅ User Signed Up:", userCredential.user);
@@ -32,7 +33,6 @@ const Login = () => {
           setErrmsg(error.message);
         });
     } else {
-      // ----------------- SIGN IN FLOW -----------------
       signInWithEmailAndPassword(auth, email.current.value, password.current.value)
         .then((userCredential) => {
           console.log("✅ User Signed In:", userCredential.user);
@@ -44,7 +44,6 @@ const Login = () => {
     }
   };
 
-  // Toggle between Sign In and Sign Up
   const toggleSignInForm = () => {
     setSignInForm(!isSignInForm);
   };
@@ -54,7 +53,7 @@ const Login = () => {
       {/* Background */}
       <img
         className="absolute inset-0 w-full h-full object-cover"
-        src="https://assets.nflxext.com/ffe/siteui/vlv3/258d0f77-2241-4282-b613-8354a7675d1a/web/IN-en-20250721-TRIFECTA-perspective_cadc8408-df6e-4313-a05d-daa9dcac139f_small.jpg"
+        src={bgLogo}
         alt="background"
       />
       <div className="absolute inset-0 bg-black opacity-50"></div>
@@ -62,7 +61,6 @@ const Login = () => {
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header />
 
-        {/* Center Form */}
         <form
           onSubmit={(e) => e.preventDefault()}
           className="p-12 bg-black opacity-80 text-white w-3/12 mx-auto mt-36 rounded-lg"
@@ -71,7 +69,6 @@ const Login = () => {
             {isSignInForm ? "Sign In" : "Sign Up"}
           </h1>
 
-          {/* Full Name only in SignUp */}
           {!isSignInForm && (
             <input
               type="text"
@@ -88,18 +85,25 @@ const Login = () => {
             className="p-4 my-4 w-full bg-gray-600"
           />
 
-          {/* Password */}
-          <input
-            ref={password}
-            type="password"
-            placeholder="Password"
-            className="p-4 my-4 w-full bg-gray-600"
-          />
+          {/* Password + toggle */}
+          <div className="relative">
+            <input
+              ref={password}
+              type={showPassword ? "text" : "password"} // 👈 toggle here
+              placeholder="Password"
+              className="p-4 my-4 w-full bg-gray-600 pr-12"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-300"
+            >
+              {showPassword ? "🙈" : "👁️"}
+            </button>
+          </div>
 
-          {/* Error Message */}
           <p className="text-red-500 font-bold text-lg py-2">{errMsg}</p>
 
-          {/* 🔹 Email/Password Button */}
           <button
             type="button"
             className="p-4 my-4 bg-red-700 w-full rounded-lg cursor-pointer"
@@ -108,7 +112,6 @@ const Login = () => {
             {isSignInForm ? "Sign In" : "Sign Up"}
           </button>
 
-          {/* Toggle SignIn/SignUp */}
           <div className="flex justify-center">
             <p className="cursor-pointer" onClick={toggleSignInForm}>
               {isSignInForm
