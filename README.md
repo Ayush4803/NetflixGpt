@@ -13,6 +13,14 @@
 - Created the Browser and Logout Option
 - Created an Acoount in TMDB nad fetch the live Movie data
 - Created a Custom Hook For NOWPLAYINGMOVIES
+- Created The Custom HOOK for Trailer
+- Fetched the Video API from TMDB
+- Added the Trailer Option
+- Created A NewSlice
+- Updated the Store
+- Provided Tailwind Css
+
+
 
 # Features
 

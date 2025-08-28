@@ -24,8 +24,8 @@ const Browse = () => {
 
  
   return (
-    <div className="bg-black min-h-screen text-white">
-      <header className="flex items-center justify-between px-8 py-4 bg-black">
+    <div className=" min-h-screen text-white">
+      <header className="flex items-center justify-between px-8 py-4 ">
         <img className="w-32 cursor-pointer" src={netflixLOGO} alt="Netflix Logo" />
         <div className="flex items-center gap-4">
           <button

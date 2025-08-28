@@ -14,7 +14,7 @@ const useNowPlayingMovies = () => {
       );
       const json = await data.json();
       dispatch(addnowPlayingMovies(json.results));
-      console.log("Fetched Movies:", json.results);
+      // console.log("Fetched Movies:", json.results);
     } catch (error) {
       console.error("❌ Fetch failed:", error);
     }
