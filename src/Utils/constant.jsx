@@ -7,11 +7,14 @@ export const bgLogo =
 
 export const userAvatar="https://wallpapers.com/images/hd/netflix-profile-pictures-1000-x-1000-qo9h82134t9nv0j0.jpg";
 
-export const API_OPTIONS= {
+export const API_OPTIONS = {
   method: 'GET',
   headers: {
     accept: 'application/json',
     Authorization: 
-    'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMDdkN2QzM2E0NjI4ZDE3Mjc3YzA1MjBlNmJjNjIyMCIsIm5iZiI6MTc1NjMxMDk2NS4wNDE5OTk4LCJzdWIiOiI2OGFmMmRiNTJmNWM0YTExMmNmMzkzZWUiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.i0hFn3ZPkNA6WounT8UDKRQuXMhP51Mke8WjQHi2T6I'
+      'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMDdkN2QzM2E0NjI4ZDE3Mjc3YzA1MjBlNmJjNjIyMCIsIm5iZiI6MTc1NjMxMDk2NS4wNDE5OTk4LCJzdWIiOiI2OGFmMmRiNTJmNWM0YTExMmNmMzkzZWUiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.i0hFn3ZPkNA6WounT8UDKRQuXMhP51Mke8WjQHi2T6I'
   }
 };
+
+
+export const  IMG_CDN_URL= "https://image.tmdb.org/t/p/w500/" 

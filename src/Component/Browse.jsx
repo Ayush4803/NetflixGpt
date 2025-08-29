@@ -6,13 +6,19 @@ import { netflixLOGO, userAvatar, API_OPTIONS } from "../Utils/constant";
 import { useDispatch } from "react-redux";
 // import { addnowPlayingMovies } from "../Utils/movieSlice";
 import useNowPlayingMovies from "../hooks/useNowPlayingMovies"
+import usePopularMovies from "../hooks/usePopularMovies"
+import usetopRated from "../hooks/usetopRated"
+import useUpcoming from "../hooks/useUpcoming"
 import MainContainer from "./MainContainer";
 import SecondryContainer from "./SecondryContainer";
 
 
 const Browse = () => {
 
-  useNowPlayingMovies()
+  useNowPlayingMovies();
+  usePopularMovies();
+  usetopRated();
+  useUpcoming();
   const navigate = useNavigate();
 
 
