@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { signOut } from "firebase/auth";
 import { auth } from "../Utils/firebase";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux"; // ✅ import useSelector
 import { netflixLOGO, userAvatar } from "../Utils/constant";
 import useNowPlayingMovies from "../hooks/useNowPlayingMovies";
 import usePopularMovies from "../hooks/usePopularMovies";
@@ -9,6 +10,8 @@ import usetopRated from "../hooks/usetopRated";
 import useUpcoming from "../hooks/useUpcoming";
 import MainContainer from "./MainContainer";
 import SecondryContainer from "./SecondryContainer";
+import GptSearch from "./GptSearch"; // ✅ your GPT search component
+import { toggleGptSearchView } from "../Utils/gptSlice";
 
 const Browse = () => {
   useNowPlayingMovies();
@@ -17,16 +20,22 @@ const Browse = () => {
   useUpcoming();
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // ✅ get showGptSearch from Redux
+  const showGptSearch = useSelector((state) => state.gpt.showGptSearch);
+
   const handleSignOut = () => {
-    signOut(auth)
-      .then(() => navigate("/"))
-      .catch(() => navigate("/"));
+    signOut(auth).then(() => navigate("/")).catch(() => navigate("/"));
   };
 
   const handlePayment = () => {
     navigate("/payment");
+  };
+
+  const handleGptSearchClick = () => {
+    dispatch(toggleGptSearchView());
   };
 
   return (
@@ -38,16 +47,15 @@ const Browse = () => {
         <div className="flex items-center gap-4">
           {/* Welcome Badge */}
           <span className="bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 rounded-full text-sm font-semibold shadow-md hover:scale-105 transform transition-transform cursor-default">
-            Welcome{" "}
-            {auth.currentUser?.displayName || auth.currentUser?.email?.split("@")[0] || "User"}
+            Welcome {auth.currentUser?.displayName || auth.currentUser?.email?.split("@")[0] || "User"}
           </span>
 
-          {/* Payment Button */}
+          {/* GPT Button */}
           <button
-            onClick={handlePayment}
-            className="bg-purple-600 px-4 py-2 rounded font-bold hover:bg-purple-700 cursor-pointer transition-colors"
+            onClick={handleGptSearchClick}
+            className="bg-purple-500 px-4 py-2 rounded font-bold  cursor-pointer hover:scale-105 transition-transform duration-200"
           >
-            Payment
+            {showGptSearch? "Home": "ASK GPT"}
           </button>
 
           {/* Avatar Dropdown */}
@@ -72,9 +80,15 @@ const Browse = () => {
         </div>
       </header>
 
-      {/* Main content */}
-      <MainContainer />
-      <SecondryContainer />
+      {/* Conditional rendering */}
+      {showGptSearch ? (
+        <GptSearch />
+      ) : (
+        <>
+          <MainContainer />
+          <SecondryContainer />
+        </>
+      )}
     </div>
   );
 };

@@ -1,19 +1,16 @@
-import {createSlice} from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 
-const gptSlice= createSlice(
-    {
-        name:"gpt",
-        initialState:{
-            showGptSearch:false
-        },
-        reducer:{
-            toggleGptSearchView:(state,action)=>{
-                state.showGptSerach=!stateshowGptSearch
-            },
-        },
+const gptSlice = createSlice({
+  name: "gpt",
+  initialState: {
+    showGptSearch: false, // ✅ correct key
+  },
+  reducers: { // ✅ should be plural
+    toggleGptSearchView: (state) => {
+      state.showGptSearch = !state.showGptSearch; // ✅ fix typos
     },
-);
+  },
+});
 
-
-export const {toggleGptSearchView}= gptSlice.actions;
+export const { toggleGptSearchView } = gptSlice.actions;
 export default gptSlice.reducer;

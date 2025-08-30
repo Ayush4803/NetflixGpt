@@ -20,6 +20,8 @@
 - Updated the Store
 - Provided Tailwind Css
 - Building GPT search bar
+- Created the GPT search bar and page
+- Added the multilingual feature in GPT search bar
 
 
 
