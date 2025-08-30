@@ -19,6 +19,7 @@
 - Created A NewSlice
 - Updated the Store
 - Provided Tailwind Css
+- Building GPT search bar
 
 
 

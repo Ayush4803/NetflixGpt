@@ -4,11 +4,11 @@ import VideoTitle from "./VideoTitle";
 import VideoBackground from "./VideoBackground";
 
 const MainContainer = () => {
-  const movies = useSelector((store) => store.movie?.nowPlayingMovies);
+  const movies = useSelector((store) => store.movie?.topRated);
 
   if (!movies || movies.length === 0) return null;
 
-  const mainMovie = movies[0];
+  const mainMovie = movies[18];
   // console.log(mainMovie);
 
 
