@@ -9,7 +9,7 @@ const useMovieTrailer = (movieId) => {
   const getMovieVideo = async () => {
     try {
       const data = await fetch(
-        `https://api.themoviedb.org/3/movie/${movieId}/videos?language=en-US`,
+        `https://corsproxy.io/https://api.themoviedb.org/3/movie/${movieId}/videos?language=en-US`,
         API_OPTIONS
       );
       const json = await data.json();

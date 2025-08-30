@@ -9,7 +9,7 @@ const usePopularMovies = () => {
   const getPopularMovies = async () => {
     try {
       const data = await fetch(
-        "https://api.themoviedb.org/3/movie/popular?language=en-US&page=1",
+        "https://corsproxy.io/https://api.themoviedb.org/3/movie/popular?language=en-US&page=1",
         API_OPTIONS
       );
       const json = await data.json();
