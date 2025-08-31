@@ -35,8 +35,9 @@ This project combines the classic Netflix-style UI with AI-powered movie recomme
 ---
 
 ## 📸 Screenshots  
-<img width="1888" height="866" alt="image" src="https://github.com/user-attachments/assets/e2930d46-5716-4be4-99cd-cdf247e87ea8" />
 
+# Multilingual Feature
+<img width="1888" height="866" alt="image" src="https://github.com/user-attachments/assets/65aa1d16-aff4-43fd-8628-34ca49aca420" />
 
 ---
 
