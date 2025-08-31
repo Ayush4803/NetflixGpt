@@ -3,6 +3,7 @@ import GptSearchbar from "./GptSearchbar"
 import GptMoviesuggestion from "./GptMoviesuggestion";
 import { bgLogo } from "../Utils/constant"
 
+
 const GptSearch = () => {
   return (
     <div>
@@ -14,6 +15,7 @@ const GptSearch = () => {
       </div>
       <GptSearchbar/>
       <GptMoviesuggestion/>
+      
     </div>
   )
 }

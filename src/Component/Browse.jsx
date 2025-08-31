@@ -12,6 +12,7 @@ import MainContainer from "./MainContainer";
 import SecondryContainer from "./SecondryContainer";
 import GptSearch from "./GptSearch"; // ✅ your GPT search component
 import { toggleGptSearchView } from "../Utils/gptSlice";
+import Footer from "./Footer"
 
 const Browse = () => {
   useNowPlayingMovies();
@@ -87,6 +88,7 @@ const Browse = () => {
         <>
           <MainContainer />
           <SecondryContainer />
+          <Footer/>
         </>
       )}
     </div>
