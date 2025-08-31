@@ -38,4 +38,3 @@ export const SUPPORTED_LANGUAGES = [
 
 
 export const OPENAI_KEY = import.meta.env.VITE_OPENAI_KEY;
-;

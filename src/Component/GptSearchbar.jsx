@@ -56,12 +56,14 @@ const GptSearchbar = () => {
 
   // Detect genre or top movie search
   const isGenreSearch = (query) => {
-    const genreKeywords = [
-      "top", "best", "imdb", "horror", "comedy", "documentary",
-      "action", "romantic", "drama", "thriller", "sci-fi"
-    ];
-    return genreKeywords.some((word) => query.toLowerCase().includes(word));
-  };
+  const genreKeywords = [
+    "top", "best", "imdb", "horror", "comedy", "documentary",
+    "action", "romantic", "drama", "thriller", "sci-fi",
+    "emotional", "retro", "ww2", "for kids", "anime","motivational"
+  ];
+  return genreKeywords.some((word) => query.toLowerCase().includes(word));
+};
+
 
   const handleGptSearchClick = async () => {
     const query = searchText.current.value.trim();
@@ -85,7 +87,7 @@ const GptSearchbar = () => {
           model: "gpt-4o-mini",
           messages: [
             { role: "system", content: "You are a movie recommendation system. Return JSON only." },
-            { role: "user", content: `Suggest top 5 movies for "${query}". Return JSON array: [{"title": ""}]` }
+            { role: "user", content: `Suggest top 10 movies for "${query}". Return JSON array: [{"title": ""}]` }
           ],
         });
 
