@@ -21,7 +21,8 @@ const VideoTitle = ({ title, overview, videoId }) => {
 
         {/* More Info Button */}
         <a
-          href="https://www.linkedin.com/feed/"  // link to your custom page
+          href="https://tinyurl.com/58hbt4pd"
+  // link to your custom page
           target="_blank"
           rel="noopener noreferrer"
         >

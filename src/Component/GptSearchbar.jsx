@@ -2,11 +2,10 @@ import openai from "../Utils/openai";
 import React, { useState, useRef } from "react";
 import lang from "../Utils/languageConstant";
 import { API_OPTIONS, IMG_CDN_URL } from "../Utils/constant";
-import Footer from "./Footer"
 
 const GptSearchbar = () => {
   const [selectedLang, setSelectedLang] = useState("en");
-  const [movieInfo, setMovieInfo] = useState(null);
+  const [moviesInfo, setMoviesInfo] = useState([]);
   const [loading, setLoading] = useState(false);
   const searchText = useRef(null);
 
@@ -24,28 +23,49 @@ const GptSearchbar = () => {
     }
   };
 
-  // Search movie on TMDB
+  // TMDB search
   const searchMovieTMDB = async (query) => {
-    const res = await fetch(
-      `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&include_adult=false&language=en-US&page=1`,
-      API_OPTIONS
-    );
-    const data = await res.json();
-    return data.results?.[0] || null; // pick first match
+    try {
+      const res = await fetch(
+        `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&include_adult=false&language=en-US&page=1`,
+        API_OPTIONS
+      );
+      if (!res.ok) throw new Error("TMDB fetch failed");
+      const data = await res.json();
+      return data.results?.[0] || null;
+    } catch (err) {
+      console.error("TMDB fetch error:", err, query);
+      return null;
+    }
   };
 
-  // Get Netflix availability from TMDB watch/providers
+  // Netflix availability check
   const checkNetflixAvailability = async (movieId) => {
-    const res = await fetch(
-      `https://api.themoviedb.org/3/movie/${movieId}/watch/providers`,
-      API_OPTIONS
-    );
-    const data = await res.json();
-    return data.results?.IN?.flatrate?.some((p) => p.provider_name === "Netflix") || false;
+    try {
+      const res = await fetch(
+        `https://api.themoviedb.org/3/movie/${movieId}/watch/providers`,
+        API_OPTIONS
+      );
+      const data = await res.json();
+      return data.results?.IN?.flatrate?.some((p) => p.provider_name === "Netflix") || false;
+    } catch (err) {
+      console.error("Netflix check failed:", err);
+      return false;
+    }
+  };
+
+  // Detect genre or top movie search
+  const isGenreSearch = (query) => {
+    const genreKeywords = [
+      "top", "best", "imdb", "horror", "comedy", "documentary",
+      "action", "romantic", "drama", "thriller", "sci-fi"
+    ];
+    return genreKeywords.some((word) => query.toLowerCase().includes(word));
   };
 
   const handleGptSearchClick = async () => {
-    if (!searchText.current.value) return;
+    const query = searchText.current.value.trim();
+    if (!query) return;
     if (isWaiting) {
       alert(`Please wait ${cooldown / 1000}s before the next search.`);
       return;
@@ -53,66 +73,72 @@ const GptSearchbar = () => {
 
     isWaiting = true;
     setLoading(true);
-    setTimeout(() => {
-      isWaiting = false;
-    }, cooldown);
+    setTimeout(() => { isWaiting = false; }, cooldown);
 
     try {
-      // 1️⃣ Ask GPT for movie details (description & cast mainly)
-      const gptResults = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful assistant that returns movie details in JSON format only."
-          },
-          {
-            role: "user",
-            content: `Give me details about the movie "${searchText.current.value}". 
-                      Return JSON with keys: description, cast (list).`
-          },
-        ],
-      });
+      const genreSearch = isGenreSearch(query);
+      let results = [];
 
-      const resultText = gptResults.choices?.[0]?.message?.content;
-      const gptData = safeJSONParse(resultText);
+      if (genreSearch) {
+        // Top 5 movies by genre or keyword search via GPT
+        const gptResults = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "You are a movie recommendation system. Return JSON only." },
+            { role: "user", content: `Suggest top 5 movies for "${query}". Return JSON array: [{"title": ""}]` }
+          ],
+        });
 
-      if (!gptData) {
-        alert("Failed to parse GPT response. Try a different movie name.");
-        setMovieInfo(null);
-        setLoading(false);
-        return;
-      }
-
-      // 2️⃣ Search TMDB for official info (poster, release date, IMDb rating)
-      const tmdbData = await searchMovieTMDB(searchText.current.value);
-
-      if (!tmdbData) {
-        alert("Movie not found on TMDB.");
-        setMovieInfo(null);
-        setLoading(false);
-        return;
-      }
-
-      const netflixAvailable = await checkNetflixAvailability(tmdbData.id);
-
-      setMovieInfo({
-        title: tmdbData.title,
-        releaseDate: tmdbData.release_date,
-        imdbRating: tmdbData.vote_average,
-        posterUrl: IMG_CDN_URL + tmdbData.poster_path,
-        availableOnNetflix: netflixAvailable,
-        description: gptData.description || tmdbData.overview,
-        cast: gptData.cast || [],
-      });
-    } catch (error) {
-      if (error.status === 429) {
-        cooldown = Math.min(cooldown * 2, 60000);
-        alert(`Rate limit hit! Next wait time increased to ${cooldown / 1000}s`);
+        const gptData = safeJSONParse(gptResults.choices?.[0]?.message?.content) || [];
+        for (const movie of gptData) {
+          const tmdbData = await searchMovieTMDB(movie.title);
+          if (!tmdbData) continue;
+          const netflixAvailable = await checkNetflixAvailability(tmdbData.id);
+          results.push({
+            title: tmdbData.title,
+            releaseDate: tmdbData.release_date,
+            imdbRating: tmdbData.vote_average,
+            posterUrl: IMG_CDN_URL + tmdbData.poster_path,
+            availableOnNetflix: netflixAvailable,
+          });
+        }
       } else {
-        console.error(error);
-        alert("An error occurred while fetching movie details.");
+        // Single movie search with description
+        const tmdbData = await searchMovieTMDB(query);
+        if (!tmdbData) {
+          alert("Movie not found on TMDB.");
+          setMoviesInfo([]);
+          return;
+        }
+        const netflixAvailable = await checkNetflixAvailability(tmdbData.id);
+
+        // Optionally, GPT for cast
+        const gptCastResult = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "You are a helpful assistant. Return JSON only." },
+            { role: "user", content: `Provide main cast for the movie "${tmdbData.title}". Return JSON: {"cast": []}` }
+          ],
+        });
+
+        const gptCast = safeJSONParse(gptCastResult.choices?.[0]?.message?.content)?.cast || [];
+
+        results.push({
+          title: tmdbData.title,
+          releaseDate: tmdbData.release_date,
+          imdbRating: tmdbData.vote_average,
+          posterUrl: IMG_CDN_URL + tmdbData.poster_path,
+          availableOnNetflix: netflixAvailable,
+          description: tmdbData.overview,
+          cast: gptCast,
+        });
       }
+
+      setMoviesInfo(results);
+
+    } catch (err) {
+      console.error(err);
+      alert("Error fetching movie data.");
     } finally {
       setLoading(false);
     }
@@ -126,13 +152,11 @@ const GptSearchbar = () => {
         onChange={(e) => setSelectedLang(e.target.value)}
       >
         {Object.keys(lang).map((key) => (
-          <option key={key} value={key} className="text-black">
-            {key.toUpperCase()}
-          </option>
+          <option key={key} value={key} className="text-black">{key.toUpperCase()}</option>
         ))}
       </select>
 
-      <form onSubmit={(e) => e.preventDefault()} className="w-1/2 bg-black grid grid-cols-12">
+      <form onSubmit={(e) => e.preventDefault()} className="w-full md:w-1/2 bg-black grid grid-cols-12">
         <input
           ref={searchText}
           type="text"
@@ -148,35 +172,46 @@ const GptSearchbar = () => {
         </button>
       </form>
 
-      {movieInfo && (
-  <div className="mt-6 w-full max-w-md bg-gray-900 text-white p-4 rounded-lg shadow-lg flex flex-col items-center mx-auto">
-    <h2 className="text-2xl font-bold mb-3 text-center">{movieInfo.title} ({movieInfo.releaseDate})</h2>
-    
-    {movieInfo.posterUrl && (
-      <img
-        src={movieInfo.posterUrl}
-        alt={movieInfo.title}
-        className="w-40 mb-4 rounded shadow-lg mx-auto"
-      />
-    )}
-
-    <p className="mb-1 text-center text-sm"><span className="font-bold">Description:</span> {movieInfo.description}</p>
-    <p className="mb-1 text-center text-sm"><span className="font-bold">Cast:</span> {Array.isArray(movieInfo.cast) ? movieInfo.cast.join(", ") : movieInfo.cast}</p>
-    <p className="mb-2 text-center text-sm"><span className="font-bold">IMDb Rating:</span> ⭐ {movieInfo.imdbRating}</p>
-
-    {/* Netflix availability with color badge */}
-    <p className={`mt-3 px-3 py-1 rounded-full font-semibold text-sm 
-                   ${movieInfo.availableOnNetflix ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
-      {movieInfo.availableOnNetflix ? "Available on Netflix ✅" : "Not on Netflix ❌"}
+      {/* Single movie result */}
+{moviesInfo.length === 1 && (
+  <div className="mt-6 w-full max-w-md bg-gray-900 text-white p-4 rounded-lg shadow-lg mx-auto flex flex-col items-center">
+    <h2 className="text-2xl font-bold mb-3 text-center">{moviesInfo[0].title} ({moviesInfo[0].releaseDate})</h2>
+    <img
+      src={moviesInfo[0].posterUrl}
+      alt={moviesInfo[0].title}
+      className="w-40 h-auto rounded mb-4"
+    />
+    <p className="text-sm mb-1 text-center line-clamp-3">{moviesInfo[0].description}</p>
+    {moviesInfo[0].cast?.length > 0 && <p className="text-xs mb-1 text-center">Cast: {moviesInfo[0].cast.join(", ")}</p>}
+    <p className="text-xs mb-1">IMDb: ⭐ {moviesInfo[0].imdbRating}</p>
+    <p className="text-xs mb-2">Release: {moviesInfo[0].releaseDate}</p>
+    <p className={`text-xs px-2 py-1 rounded text-center ${moviesInfo[0].availableOnNetflix ? 'bg-green-600' : 'bg-red-600'}`}>
+      {moviesInfo[0].availableOnNetflix ? "Netflix ✅" : "Not Netflix ❌"}
     </p>
   </div>
 )}
 
-
-
+{/* Horizontal scroll container for multiple movies */}
+{moviesInfo.length > 1 && (
+  <div className="mt-6 w-full overflow-x-auto flex space-x-4 px-4">
+    {moviesInfo.map((movie, idx) => (
+      <div
+        key={idx}
+        className="min-w-[180px] bg-gray-900 text-white p-2 rounded-lg flex-shrink-0 cursor-pointer
+                   transform transition-transform duration-200 hover:scale-105 hover:shadow-lg"
+      >
+        <img src={movie.posterUrl} alt={movie.title} className="w-full h-48 object-cover rounded mb-2"/>
+        <h3 className="text-sm font-bold cursor-pointer">{movie.title}</h3>
+        <p className="text-xs mb-1 cursor-pointer">IMDb: ⭐ {movie.imdbRating}</p>
+        <p className="text-xs mb-1 cursor-pointer">Release: {movie.releaseDate}</p>
+        <p className={`text-xs px-1 py-0.5 rounded text-center ${movie.availableOnNetflix ? 'bg-green-600' : 'bg-red-600'}`}>
+          {movie.availableOnNetflix ? "Netflix ✅" : "Not Netflix ❌"}
+        </p>
+      </div>
+    ))}
+  </div>
+)}
     </div>
-
-    
   );
 };
 
