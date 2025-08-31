@@ -22,6 +22,9 @@
 - Building GPT search bar
 - Created the GPT search bar and page
 - Added the multilingual feature in GPT search bar
+- Enable the GPT search bar 
+- Added the GPT Search Option which will fetch movie details and also tell is it available on Netflix or not
+- Gpt Bar will fetch your requrement like 'Top rated ' 'Comedy Movies' etc to give you result
 
 
 

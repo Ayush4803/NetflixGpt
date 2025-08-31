@@ -12,7 +12,7 @@ const VideoBackground = ({ movieId }) => {
       {trailerVideo && (
         <iframe
           className="w-screen aspect-video" // Tailwind for responsive sizing
-          src={`https://www.youtube.com/embed/${trailerVideo.key}?autoplay=1&mute=1`}
+          src={`https://www.youtube.com/embed/${trailerVideo.key}?autoplay=1`}
           title="YouTube trailer"
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
