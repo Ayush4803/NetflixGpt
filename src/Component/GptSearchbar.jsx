@@ -27,7 +27,7 @@ const GptSearchbar = () => {
   const searchMovieTMDB = async (query) => {
     try {
       const res = await fetch(
-        `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&include_adult=false&language=en-US&page=1`,
+        `https://corsproxy.io/https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&include_adult=false&language=en-US&page=1`,
         API_OPTIONS
       );
       if (!res.ok) throw new Error("TMDB fetch failed");
@@ -43,7 +43,7 @@ const GptSearchbar = () => {
   const checkNetflixAvailability = async (movieId) => {
     try {
       const res = await fetch(
-        `https://api.themoviedb.org/3/movie/${movieId}/watch/providers`,
+        `https://corsproxy.io/https://api.themoviedb.org/3/movie/${movieId}/watch/providers`,
         API_OPTIONS
       );
       const data = await res.json();
