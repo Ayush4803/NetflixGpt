@@ -1,7 +1,53 @@
-import openai from "../Utils/openai";
 import React, { useState, useRef } from "react";
 import lang from "../Utils/languageConstant";
 import { API_OPTIONS, IMG_CDN_URL } from "../Utils/constant";
+
+// Genre-to-movie mapping (mock GPT responses)
+const genreMovies = {
+  ww2: [
+    "Saving Private Ryan",
+    "Dunkirk",
+    "Schindler's List",
+    "The Pianist",
+    "Fury",
+    "Letters from Iwo Jima",
+    "The Thin Red Line",
+    "Hacksaw Ridge",
+    "Enemy at the Gates",
+    "Life is Beautiful",
+    "Midway",
+    "Patton",
+    "A Bridge Too Far",
+    "The Great Escape",
+    "Jojo Rabbit"
+  ],
+  horror: [
+    "The Conjuring",
+    "Insidious",
+    "It",
+    "Hereditary",
+    "A Nightmare on Elm Street",
+    "The Exorcist",
+    "Get Out",
+    "Halloween",
+    "Paranormal Activity",
+    "Saw",
+    "Friday the 13th"
+  ],
+  comedy: [
+    "The Hangover",
+    "Superbad",
+    "Step Brothers",
+    "Anchorman",
+    "Dumb and Dumber",
+    "Ferris Bueller's Day Off",
+    "Groundhog Day",
+    "Bridesmaids",
+    "Mean Girls",
+    "21 Jump Street"
+  ],
+  // Add more genres as needed
+};
 
 const GptSearchbar = () => {
   const [selectedLang, setSelectedLang] = useState("en");
@@ -11,17 +57,6 @@ const GptSearchbar = () => {
 
   let isWaiting = false;
   let cooldown = 5000;
-
-  // Safe JSON parser for GPT responses
-  const safeJSONParse = (text) => {
-    try {
-      const cleaned = text.replace(/```json|```/g, "").trim();
-      return JSON.parse(cleaned);
-    } catch (err) {
-      console.error("Failed to parse GPT JSON:", err, "\nOriginal text:", text);
-      return null;
-    }
-  };
 
   // TMDB search
   const searchMovieTMDB = async (query) => {
@@ -54,17 +89,21 @@ const GptSearchbar = () => {
     }
   };
 
-  // Detect genre or top movie search
+  // Detect genre search
   const isGenreSearch = (query) => {
-  const genreKeywords = [
-    "top", "best", "imdb", "horror", "comedy", "documentary",
-    "action", "romantic", "drama", "thriller", "sci-fi",
-    "emotional", "retro", "ww2", "for kids", "anime","motivational"
-  ];
-  return genreKeywords.some((word) => query.toLowerCase().includes(word));
-};
+    return Object.keys(genreMovies).some((genre) => query.toLowerCase().includes(genre));
+  };
 
+  // Mock GPT response using genreMovies
+  const mockGptResponse = (query) => {
+    const genreKey = Object.keys(genreMovies).find((genre) =>
+      query.toLowerCase().includes(genre)
+    );
+    if (!genreKey) return [];
+    return genreMovies[genreKey].slice(0, 15).map((title) => ({ title }));
+  };
 
+  // Search handler
   const handleGptSearchClick = async () => {
     const query = searchText.current.value.trim();
     if (!query) return;
@@ -82,16 +121,7 @@ const GptSearchbar = () => {
       let results = [];
 
       if (genreSearch) {
-        // Top 5 movies by genre or keyword search via GPT
-        const gptResults = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: "You are a movie recommendation system. Return JSON only." },
-            { role: "user", content: `Suggest top 10 movies for "${query}". Return JSON array: [{"title": ""}]` }
-          ],
-        });
-
-        const gptData = safeJSONParse(gptResults.choices?.[0]?.message?.content) || [];
+        const gptData = mockGptResponse(query); // genre-based movie titles
         for (const movie of gptData) {
           const tmdbData = await searchMovieTMDB(movie.title);
           if (!tmdbData) continue;
@@ -105,26 +135,14 @@ const GptSearchbar = () => {
           });
         }
       } else {
-        // Single movie search with description
         const tmdbData = await searchMovieTMDB(query);
         if (!tmdbData) {
           alert("Movie not found on TMDB.");
           setMoviesInfo([]);
+          setLoading(false);
           return;
         }
         const netflixAvailable = await checkNetflixAvailability(tmdbData.id);
-
-        // Optionally, GPT for cast
-        const gptCastResult = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: "You are a helpful assistant. Return JSON only." },
-            { role: "user", content: `Provide main cast for the movie "${tmdbData.title}". Return JSON: {"cast": []}` }
-          ],
-        });
-
-        const gptCast = safeJSONParse(gptCastResult.choices?.[0]?.message?.content)?.cast || [];
-
         results.push({
           title: tmdbData.title,
           releaseDate: tmdbData.release_date,
@@ -132,12 +150,11 @@ const GptSearchbar = () => {
           posterUrl: IMG_CDN_URL + tmdbData.poster_path,
           availableOnNetflix: netflixAvailable,
           description: tmdbData.overview,
-          cast: gptCast,
+          cast: ["Actor 1", "Actor 2", "Actor 3"], // mocked cast
         });
       }
 
       setMoviesInfo(results);
-
     } catch (err) {
       console.error(err);
       alert("Error fetching movie data.");
@@ -148,6 +165,7 @@ const GptSearchbar = () => {
 
   return (
     <div className="pt-[5%] flex flex-col items-center">
+      {/* Language selector */}
       <select
         className="mb-8 p-2 rounded text-white font-semibold"
         value={selectedLang}
@@ -158,6 +176,7 @@ const GptSearchbar = () => {
         ))}
       </select>
 
+      {/* Search bar */}
       <form onSubmit={(e) => e.preventDefault()} className="w-full md:w-1/2 bg-black grid grid-cols-12">
         <input
           ref={searchText}
@@ -175,44 +194,40 @@ const GptSearchbar = () => {
       </form>
 
       {/* Single movie result */}
-{moviesInfo.length === 1 && (
-  <div className="mt-6 w-full max-w-md bg-gray-900 text-white p-4 rounded-lg shadow-lg mx-auto flex flex-col items-center">
-    <h2 className="text-2xl font-bold mb-3 text-center">{moviesInfo[0].title} ({moviesInfo[0].releaseDate})</h2>
-    <img
-      src={moviesInfo[0].posterUrl}
-      alt={moviesInfo[0].title}
-      className="w-40 h-auto rounded mb-4"
-    />
-    <p className="text-sm mb-1 text-center line-clamp-3">{moviesInfo[0].description}</p>
-    {moviesInfo[0].cast?.length > 0 && <p className="text-xs mb-1 text-center">Cast: {moviesInfo[0].cast.join(", ")}</p>}
-    <p className="text-xs mb-1">IMDb: ⭐ {moviesInfo[0].imdbRating}</p>
-    <p className="text-xs mb-2">Release: {moviesInfo[0].releaseDate}</p>
-    <p className={`text-xs px-2 py-1 rounded text-center ${moviesInfo[0].availableOnNetflix ? 'bg-green-600' : 'bg-red-600'}`}>
-      {moviesInfo[0].availableOnNetflix ? "Netflix ✅" : "Not Netflix ❌"}
-    </p>
-  </div>
-)}
+      {moviesInfo.length === 1 && (
+        <div className="mt-6 w-full max-w-md bg-gray-900 text-white p-4 rounded-lg shadow-lg mx-auto flex flex-col items-center">
+          <h2 className="text-2xl font-bold mb-3 text-center">{moviesInfo[0].title} ({moviesInfo[0].releaseDate})</h2>
+          <img src={moviesInfo[0].posterUrl} alt={moviesInfo[0].title} className="w-40 h-auto rounded mb-4" />
+          <p className="text-sm mb-1 text-center line-clamp-3">{moviesInfo[0].description}</p>
+          {moviesInfo[0].cast?.length > 0 && <p className="text-xs mb-1 text-center">Cast: {moviesInfo[0].cast.join(", ")}</p>}
+          <p className="text-xs mb-1">IMDb: ⭐ {moviesInfo[0].imdbRating}</p>
+          <p className="text-xs mb-2">Release: {moviesInfo[0].releaseDate}</p>
+          <p className={`text-xs px-2 py-1 rounded text-center ${moviesInfo[0].availableOnNetflix ? 'bg-green-600' : 'bg-red-600'}`}>
+            {moviesInfo[0].availableOnNetflix ? "Netflix ✅" : "Not Netflix ❌"}
+          </p>
+        </div>
+      )}
 
-{/* Horizontal scroll container for multiple movies */}
-{moviesInfo.length > 1 && (
-  <div className="mt-6 w-full overflow-x-auto flex space-x-4 px-4">
-    {moviesInfo.map((movie, idx) => (
-      <div
-        key={idx}
-        className="min-w-[180px] bg-gray-900 text-white p-2 rounded-lg flex-shrink-0 cursor-pointer
-                   transform transition-transform duration-200 hover:scale-105 hover:shadow-lg"
-      >
-        <img src={movie.posterUrl} alt={movie.title} className="w-full h-48 object-cover rounded mb-2"/>
-        <h3 className="text-sm font-bold cursor-pointer">{movie.title}</h3>
-        <p className="text-xs mb-1 cursor-pointer">IMDb: ⭐ {movie.imdbRating}</p>
-        <p className="text-xs mb-1 cursor-pointer">Release: {movie.releaseDate}</p>
-        <p className={`text-xs px-1 py-0.5 rounded text-center ${movie.availableOnNetflix ? 'bg-green-600' : 'bg-red-600'}`}>
-          {movie.availableOnNetflix ? "Netflix ✅" : "Not Netflix ❌"}
-        </p>
-      </div>
-    ))}
-  </div>
-)}
+      {/* Multiple movies */}
+      {moviesInfo.length > 1 && (
+        <div className="mt-6 w-full overflow-x-auto flex space-x-4 px-4">
+          {moviesInfo.map((movie, idx) => (
+            <div
+              key={idx}
+              className="min-w-[180px] bg-gray-900 text-white p-2 rounded-lg flex-shrink-0 cursor-pointer
+                         transform transition-transform duration-200 hover:scale-105 hover:shadow-lg"
+            >
+              <img src={movie.posterUrl} alt={movie.title} className="w-full h-48 object-cover rounded mb-2"/>
+              <h3 className="text-sm font-bold cursor-pointer">{movie.title}</h3>
+              <p className="text-xs mb-1 cursor-pointer">IMDb: ⭐ {movie.imdbRating}</p>
+              <p className="text-xs mb-1 cursor-pointer">Release: {movie.releaseDate}</p>
+              <p className={`text-xs px-1 py-0.5 rounded text-center ${movie.availableOnNetflix ? 'bg-green-600' : 'bg-red-600'}`}>
+                {movie.availableOnNetflix ? "Netflix ✅" : "Not Netflix ❌"}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
