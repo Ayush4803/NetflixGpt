@@ -9,7 +9,7 @@ const useNowPlayingMovies = () => {
   const getNowPlayingMovies = async () => {
     try {
       const data = await fetch(
-        "https://corsproxy.io/https://api.themoviedb.org/3/movie/now_playing?language=en-US&page=1",
+        "https://api.themoviedb.org/3/movie/now_playing?language=en-US&page=1",
         API_OPTIONS
       );
       const json = await data.json();
